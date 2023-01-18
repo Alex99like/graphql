@@ -1,66 +1,73 @@
-import graphql, {GraphQLSchema} from 'graphql'
-import {Dir} from "fs";
+import {IClient, IProject} from '../sampleData.js'
 
-const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt } = graphql
+import Project from "../models/Project.js";
+import Client from "../models/Client.js";
 
-const movies = [
-  { id: '1', name: 'Pulp Fiction', genre: 'Crime', directorId: '1', },
-  { id: '2', name: '1984', genre: 'Sci-Fi', directorId: '2', },
-  { id: '3', name: 'V for vendetta', genre: 'Sci-Fi-Triller', directorId: '3', },
-  { id: '4', name: 'Snatch', genre: 'Crime-Comedy', directorId: '4', },
-];
+import {
+  GraphQLID, GraphQLList,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString
+} from "graphql";
 
-const directors = [
-  { id: '1', name: 'Quentin Tarantino', age: 55 },
-  { id: '2', name: 'Michael Radford', age: 72 },
-  { id: '3', name: 'James McTeigue', age: 51 },
-  { id: '4', name: 'Guy Ritchie', age: 50 },
-];
-
-const MovieType = new GraphQLObjectType({
-  name: 'Movie',
+const ProjectType = new GraphQLObjectType({
+  name: 'Project',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    genre: { type: GraphQLString },
-    director: {
-      type: DirectorType,
-      resolve(parent, args) {
-        return directors.find(director => director.id === parent.id);
+    description: { type: GraphQLString },
+    status: { type: GraphQLString },
+    client: {
+      type: ClientType,
+      resolve(parent: IProject, args) {
+        return Client.findById(parent.clientId)
       }
     }
-  }),
-});
+  })
+})
 
-const DirectorType = new GraphQLObjectType({
-  name: 'Director',
+const ClientType = new GraphQLObjectType({
+  name: 'Client',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    age: { type: GraphQLInt },
-  }),
-});
+    email: { type: GraphQLString },
+    phone: { type: GraphQLString }
+  })
+})
 
-const Query = new GraphQLObjectType({
-  name: 'Query',
+const RootQuery = new GraphQLObjectType({
+  name: 'RootQueryType',
   fields: {
-    movie: {
-      type: MovieType,
-      args: { id: { type: GraphQLID } },
+    projects: {
+      type: new GraphQLList(ProjectType),
       resolve(parent, args) {
-        return movies.find(movie => movie.id === args.id);
-      },
+        return Project.find();
+      }
     },
-    director: {
-      type: DirectorType,
+    project: {
+      type: ProjectType,
       args: { id: { type: GraphQLID } },
-      resolve(parent, args) {
-        return directors.find(director => director.id === args.id);
-      },
+      resolve(parent: IProject, args) {
+        return Project.findById(args.id)
+      }
     },
+    clients: {
+      type: new GraphQLList(ClientType),
+      resolve(parent, args) {
+        return Client.find()
+      }
+    },
+    client: {
+      type: ClientType,
+      args: { id: { type: GraphQLID } },
+      resolve(parent: IClient, args) {
+        return Client.findById(args.id)
+      }
+    }
   }
-});
+})
 
 export default new GraphQLSchema({
-  query: Query
+  query: RootQuery
 })

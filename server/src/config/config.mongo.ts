@@ -1,0 +1,1 @@
+const getMongoString = 'mongodb://admin:admin@localhost:27017/purple?authSource=admin'
