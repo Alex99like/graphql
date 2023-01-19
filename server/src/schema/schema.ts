@@ -1,4 +1,4 @@
-import {clients, IClient, IProject} from '../sampleData.js'
+import {clients, IClient, IProject, projects} from '../sampleData.js'
 
 import Project from "../models/Project.js";
 import Client from "../models/Client.js";
@@ -95,7 +95,13 @@ const mutation = new GraphQLObjectType({
         id: { type: GraphQLNonNull(GraphQLID) }
       },
       resolve(parent, args) {
-        return Client.findByIdAndRemove(args.id)
+        return Client.findByIdAndRemove(args.id),
+        (project: IProject[]) => {
+          projects.forEach(project => {
+            // @ts-ignore
+            project.remove()
+          })
+        }
       }
     },
     addProject: {
